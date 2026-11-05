@@ -1,25 +1,32 @@
 const express = require("express");
-
 const router = express.Router();
 
-// Register for event
-router.post("/", (req, res) => {
-    res.send("Event registration successful");
-});
+// Import registration controller functions
+const {
+    registerForEvent,
+    getAllRegistrations,
+    getRegistrationById,
+    cancelRegistration,
+    getUserRegistrations
+} = require("../controllers/registrationController.js");
 
-// Get all registrations
-router.get("/", (req, res) => {
-    res.send("Get all registrations");
-});
+// Import middleware
+const authMiddleware = require("../middleware/authMiddleware");
+const adminMiddleware = require("../middleware/adminMiddleware");
 
-// Get participants of an event
-router.get("/:eventId", (req, res) => {
-    res.send("Get event participants");
-});
+// POST - Register for an event (Logged-in user)
+router.post("/:eventId", authMiddleware, registerForEvent);
 
-// DELETE - Cancel registration
-router.delete("/", (req, res) => {
-res.send("Registration cancelled");
-});
+// GET - Get all registrations (Admin only)
+router.get("/", authMiddleware, adminMiddleware, getAllRegistrations);
+
+// GET - Get logged-in user's registrations
+router.get("/my-registrations", authMiddleware, getUserRegistrations);
+
+// GET - Get a particular registration by ID
+router.get("/:id", authMiddleware, getRegistrationById);
+
+// DELETE - Cancel registration (Owner or Admin)
+router.delete("/:id", authMiddleware, cancelRegistration);
 
 module.exports = router;
