@@ -1,148 +1,164 @@
 import React, { useState } from "react";
+
 import {
+    Container,
+    Box,
+    Typography,
     TextField,
     Button,
     Paper,
-    Typography,
     InputAdornment,
-    IconButton
+    IconButton,
+    Alert
 } from "@mui/material";
 
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 function Login() {
 
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const navigate = useNavigate();
+    const { login } = useAuth();
+
+    const [formData, setFormData] = useState({
+        email: "",
+        password: ""
+    });
+
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false);
 
-    const { login } = useAuth();
-    const navigate = useNavigate();
+    const handleChange = (e) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
+        });
+    };
 
     const handleSubmit = async (e) => {
-
         e.preventDefault();
         setError("");
 
-        if (!email || !password) {
-            setError("Please enter email and password");
-            return;
-        }
-
         try {
-            setLoading(true);
-
-            await login(email, password);
-
-            alert("Login Successful!");
-
-            navigate("/");
-
-        } catch (error) {
-
-            setError(
-                error.response?.data?.message || "Login failed. Please try again."
+            const response = await login(
+                formData.email,
+                formData.password
             );
 
-        } finally {
-            setLoading(false);
+            if (response.user?.role === "admin") {
+                navigate("/admin/dashboard");
+            } else {
+                navigate("/");
+            }
+
+        } catch (err) {
+            setError(
+                err.response?.data?.message ||
+                "Login failed. Please try again."
+            );
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 flex justify-center items-center px-4 py-10">
+        <Container maxWidth="sm" sx={{ mt: 8, mb: 8 }}>
 
-            <Paper
-                elevation={4}
-                className="w-full max-w-md p-8 rounded-2xl"
-            >
+            <Paper elevation={4} sx={{ p: 4, borderRadius: 3 }}>
 
                 <Typography
                     variant="h4"
-                    className="text-center font-bold text-blue-600 mb-2"
+                    fontWeight="bold"
+                    textAlign="center"
                 >
                     Welcome Back!
                 </Typography>
 
                 <Typography
-                    className="text-center text-gray-500 mb-8"
+                    color="text.secondary"
+                    textAlign="center"
+                    mb={3}
                 >
                     Login to your EventHub account
                 </Typography>
 
-                <form onSubmit={handleSubmit}>
+                {error && (
+                    <Alert severity="error" sx={{ mb: 2 }}>
+                        {error}
+                    </Alert>
+                )}
 
-                    {/* Email */}
+                <Box component="form" onSubmit={handleSubmit}>
+
                     <TextField
-                        label="Email Address"
-                        type="email"
                         fullWidth
+                        label="Email Address"
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleChange}
                         margin="normal"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        autoComplete="email"
                     />
 
-                    {/* Password */}
                     <TextField
-                        label="Password"
-                        type={showPassword ? "text" : "password"}
                         fullWidth
+                        label="Password"
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        value={formData.password}
+                        onChange={handleChange}
                         margin="normal"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        autoComplete="current-password"
                         InputProps={{
                             endAdornment: (
                                 <InputAdornment position="end">
+
                                     <IconButton
-                                        onClick={() => setShowPassword(!showPassword)}
+                                        onClick={() =>
+                                            setShowPassword(!showPassword)
+                                        }
+                                        onMouseDown={(e) => e.preventDefault()}
+                                        edge="end"
+                                        aria-label="toggle password visibility"
                                     >
-                                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                                        {showPassword ? (
+                                            <VisibilityOff />
+                                        ) : (
+                                            <Visibility />
+                                        )}
                                     </IconButton>
+
                                 </InputAdornment>
                             )
                         }}
                     />
 
-                    {/* Error Message */}
-                    {error && (
-                        <Typography className="text-red-600 mt-3">
-                            {error}
-                        </Typography>
-                    )}
-
-                    {/* Login Button */}
                     <Button
                         type="submit"
-                        variant="contained"
                         fullWidth
-                        disabled={loading}
-                        sx={{ mt: 3, py: 1.5 }}
+                        variant="contained"
+                        size="large"
+                        sx={{ mt: 3, py: 1.3 }}
                     >
-                        {loading ? "Logging in..." : "Login"}
+                        Login
                     </Button>
 
-                </form>
+                </Box>
 
-                {/* Register Link */}
-                <Typography className="text-center mt-6">
-                    Don't have an account?
-                    {" "}
-                    <Link
-                        to="/register"
-                        className="text-blue-600 font-semibold no-underline"
-                    >
+                <Typography textAlign="center" mt={3}>
+                    Don't have an account?{" "}
+                    <Link to="/register" style={{ textDecoration: "none" }}>
                         Register
                     </Link>
                 </Typography>
 
             </Paper>
 
-        </div>
+        </Container>
     );
 }
 

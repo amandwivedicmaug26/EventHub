@@ -2,7 +2,6 @@ const Registration = require("../models/Registration");
 const Event = require("../models/Event");
 const mongoose = require("mongoose");
 
-
 // 1. REGISTER FOR EVENT
 const registerForEvent = async (req, res) => {
     let seatReserved = false;
